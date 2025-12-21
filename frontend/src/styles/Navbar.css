@@ -1,0 +1,11 @@
+/* Navbar component styles */
+.site-navbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.site-navbar a {
+  color: inherit;
+  text-decoration: none;
+}

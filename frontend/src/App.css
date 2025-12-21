@@ -1,0 +1,33 @@
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: linear-gradient(180deg, #071028 0%, #091323 100%);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--container-padding);
+}
+
+.header {
+  background: var(--card);
+  padding: var(--gap-md);
+}
+
+.footer {
+  background: var(--card);
+  padding: var(--gap-md);
+  text-align: center;
+}
+
+.sidebar {
+  background: var(--card);
+  padding: var(--gap-md);
+}
+
+.main {
+  padding: var(--gap-md);
+}

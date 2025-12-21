@@ -1,0 +1,3 @@
+/* VideoCard component styles */
+.video-card { display:block; border:1px solid var(--muted,#eee); padding:0.5rem; }
+.video-card .title { font-size:0.95rem; }

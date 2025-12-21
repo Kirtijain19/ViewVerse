@@ -1,0 +1,16 @@
+/* Footer component styles (matches Footer.jsx classes) */
+.footer {
+  background: linear-gradient(180deg, #071025 0%, #071225 100%);
+  color: #ddd;
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+
+.footer-container {
+  max-width: 1200px; margin: 0 auto; display:flex; gap:24px; padding:24px 16px; flex-wrap:wrap;
+}
+.footer-section { min-width:160px; }
+.footer-section h4 { margin-bottom:8px; color:#fff }
+.footer-section a { display:block; color:rgba(255,255,255,0.8); margin:4px 0; text-decoration:none }
+
+.footer-bottom { padding:12px 16px; text-align:center; font-size:0.85rem; color:rgba(255,255,255,0.7); }
+

@@ -1,0 +1,3 @@
+/* VideoUpload component styles */
+.video-upload { display:flex; flex-direction:column; gap:0.5rem; }
+.video-upload input[type=file] { display:block; }
