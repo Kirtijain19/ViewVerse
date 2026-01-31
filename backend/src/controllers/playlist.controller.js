@@ -99,7 +99,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     }
 
     playlist.videos=playlist.videos.filter(
-        (vid)=>vid.toString!==videoId.toString()
+        (vid)=>vid.toString()!==videoId.toString()
     )
 
     
@@ -123,7 +123,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
         throw new ApiError(404, "playlist not found")
     }
 
-    if(playlistId.owner.toString()!==req.user?._id){
+    if(playlist.owner.toString()!==req.user?._id.toString()){
         throw new ApiError(400, "you can delete only your own playlists")
     }
     await playlist.deleteOne()
@@ -146,7 +146,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         throw new ApiError(404, "playlist not found")
     }
 
-    if(playlistId.owner.toString()!==req.user?._id){
+    if(playlist.owner.toString()!==req.user?._id.toString()){
         throw new ApiError(400, "you can update only your own playlists")
     }
 

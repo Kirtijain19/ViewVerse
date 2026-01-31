@@ -21,7 +21,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         throw new ApiError(400, "you cannot subscribe to your own channel")
     }
 
-    const existingSubscription = Subscription.findOne({
+    const existingSubscription = await Subscription.findOne({
         channel: channelId,
         subscriber: userId
     })
@@ -51,7 +51,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
     const subscribers=await Subscription.find({
         channel:channelId
-    }).populate("susbcriber","username fullname, avatar")
+    }).populate("subscriber","username fullname avatar")
 
     return res.status(200)
         .json(new ApiResponse(200, subscribers, "subscriber list fetched successfully"))
@@ -69,7 +69,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     }).populate("channel", "username fullname avatar")
     
     return res.status(200)
-        .json(new ApiResponse(200, null, "channels user has subscribed fetched successfully"))
+        .json(new ApiResponse(200, subscribedChannels, "channels user has subscribed fetched successfully"))
 })
 
 export {

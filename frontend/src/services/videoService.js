@@ -1,36 +1,40 @@
-import { API_BASE, STORAGE_TOKEN_KEY } from '../utils/constants';
+import api from "./api.js";
 
-const getAuthHeaders = () => {
-	const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-	return token ? { Authorization: `Bearer ${token}` } : {};
+export const getVideos = async (params = {}) => {
+  const { data } = await api.get("/videos", { params });
+  return data;
 };
 
-const videoService = {
-	getAllVideos: async () => {
-		const res = await fetch(`${API_BASE}/videos`, {
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-		});
-		if (!res.ok) throw new Error('Failed to fetch videos');
-		return res.json();
-	},
-	uploadVideo: async (formData) => {
-		const res = await fetch(`${API_BASE}/videos`, {
-			method: 'POST',
-			headers: { ...getAuthHeaders() },
-			body: formData,
-		});
-		if (!res.ok) {
-			let errText = '';
-			try {
-				const data = await res.json();
-				errText = data?.message || data?.error || JSON.stringify(data);
-			} catch (e) {
-				errText = await res.text();
-			}
-			throw new Error(`Failed to upload video: ${res.status} ${errText}`);
-		}
-		return res.json();
-	},
+export const getVideoById = async (videoId) => {
+  const { data } = await api.get(`/videos/${videoId}`);
+  return data;
 };
 
-export default videoService;
+export const publishVideo = async (formData) => {
+  const { data } = await api.post("/videos", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return data;
+};
+
+export const getChannelVideos = async () => {
+  const { data } = await api.get("/dashboard/videos");
+  return data;
+};
+
+export const updateVideo = async (videoId, payload) => {
+  const { data } = await api.patch(`/videos/${videoId}`, payload, {
+    headers: payload instanceof FormData ? { "Content-Type": "multipart/form-data" } : undefined
+  });
+  return data;
+};
+
+export const deleteVideo = async (videoId) => {
+  const { data } = await api.delete(`/videos/${videoId}`);
+  return data;
+};
+
+export const togglePublishStatus = async (videoId) => {
+  const { data } = await api.patch(`/videos/toggle/publish/${videoId}`);
+  return data;
+};

@@ -5,10 +5,22 @@ import cookieParser from "cookie-parser"
 const app=express()
 
 // app.use(cors())
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+    : [];
+
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true);
+            if (!allowedOrigins.length || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error("Not allowed by CORS"));
+        },
+        credentials: true
+    })
+);
 
 // data will be coming from various sources: url, json, body
 app.use(express.urlencoded({extended:true, limit:"16kb"}))  // extended means to allow nested objects
@@ -44,6 +56,16 @@ app.use("/api/v1/comments", commentRouter)
 app.use("/api/v1/likes", likeRouter)
 app.use("/api/v1/playlist", playlistRouter)
 app.use("/api/v1/dashboard", dashboardRouter)
+
+// Error handler
+app.use((err, req, res, next) => {
+    const statusCode = err?.statusCode || 500;
+    return res.status(statusCode).json({
+        success: false,
+        message: err?.message || "Internal Server Error",
+        errors: err?.errors || []
+    });
+});
 
 //http://localhost:8000/api/v1/user/register
 

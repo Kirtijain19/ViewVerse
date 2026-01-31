@@ -20,7 +20,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     if (existingLike) {
         await existingLike.deleteOne()
         return res.status(200)
-            .json(ApiResponse(200, null, "video unliked successfully"))
+            .json(new ApiResponse(200, null, "video unliked successfully"))
     }
 
     const like=await Like.create({
@@ -39,7 +39,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
         throw new ApiError(400, "invalid comment id")
     }
 
-    const existingLike=Like.findOne({
+    const existingLike=await Like.findOne({
         comment:commentId,
         likedBy:req.user._id
     })
@@ -47,7 +47,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     if(existingLike){
         await existingLike.deleteOne()
         return res.status(200)
-        .json(ApiResponse(200, null, "comment unliked successfully"))
+        .json(new ApiResponse(200, null, "comment unliked successfully"))
     }
 
     const like=await Like.create({
@@ -67,7 +67,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
         throw new ApiError(400, "invalid tweet id")
     }
 
-    const existingLike=Like.findOne({
+    const existingLike=await Like.findOne({
         tweet:tweetId,
         likedBy:req.user._id
     })
@@ -75,7 +75,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     if(existingLike){
         await existingLike.deleteOne()
         return res.status(200)
-        .json(ApiResponse(200, null, "tweet unliked successfully"))
+        .json(new ApiResponse(200, null, "tweet unliked successfully"))
     }
 
     const like=await Like.create({
@@ -100,7 +100,13 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         video:{
             $exists:true
         }
-    }).populate("video")   //This replaces the video ObjectId in each Like document with the actual Video document fetched from the videos collection.
+    }).populate({
+        path: "video",
+        populate: {
+            path: "owner",
+            select: "fullname username avatar"
+        }
+    })   //This replaces the video ObjectId in each Like document with the actual Video document fetched from the videos collection.
     .sort({createdAt:-1})
 
     return res.status(200)

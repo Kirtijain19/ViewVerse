@@ -1,30 +1,21 @@
-import { API_BASE, STORAGE_TOKEN_KEY } from '../utils/constants';
+import api from "./api.js";
 
-const getAuthHeaders = () => {
-	const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-	return token ? { Authorization: `Bearer ${token}` } : {};
+export const toggleVideoLike = async (videoId) => {
+  const { data } = await api.post(`/likes/toggle/v/${videoId}`);
+  return data;
 };
 
-async function toggleVideoLike(videoId) {
-	const res = await fetch(`${API_BASE}/likes/toggle/v/${videoId}`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			...getAuthHeaders(),
-		},
-	});
-
-	if (!res.ok) {
-		const err = await res.json().catch(() => ({}));
-		throw new Error(err.message || 'Failed to toggle like');
-	}
-
-	return res.json();
-}
-
-const likeService = {
-	likeVideo: (id) => toggleVideoLike(id),
-	unlikeVideo: (id) => toggleVideoLike(id), // backend toggles like/unlike on the same endpoint
+export const toggleCommentLike = async (commentId) => {
+  const { data } = await api.post(`/likes/toggle/c/${commentId}`);
+  return data;
 };
 
-export default likeService;
+export const getLikedVideos = async () => {
+  const { data } = await api.get("/likes/videos");
+  return data;
+};
+
+export const toggleTweetLike = async (tweetId) => {
+  const { data } = await api.post(`/likes/toggle/t/${tweetId}`);
+  return data;
+};

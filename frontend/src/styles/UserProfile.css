@@ -1,3 +1,0 @@
-/* UserProfile component styles */
-.user-profile { display:block; padding:1rem; }
-.user-profile .bio { color:var(--muted,#666); }

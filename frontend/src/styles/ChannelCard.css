@@ -1,3 +1,0 @@
-/* ChannelCard component styles */
-.channel-card { display:flex; gap:0.75rem; align-items:center; }
-.channel-card .name { font-weight:600; }

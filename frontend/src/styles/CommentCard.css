@@ -1,3 +1,0 @@
-/* CommentCard component styles */
-.comment-card { padding:0.5rem; border-bottom:1px solid var(--muted,#eee); }
-.comment-card .author { font-weight:600; }

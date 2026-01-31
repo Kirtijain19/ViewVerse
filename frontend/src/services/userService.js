@@ -1,37 +1,45 @@
-import { API_BASE, STORAGE_TOKEN_KEY, STORAGE_USER_KEY } from '../utils/constants';
+import api from "./api.js";
 
-const getAuthHeaders = () => {
-	const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-	return token ? { Authorization: `Bearer ${token}` } : {};
+export const getUserById = async (userId) => {
+  const { data } = await api.get(`/users/${userId}`);
+  return data;
 };
 
-const userService = {
-	getUserProfile: async (userId) => {
-		const res = await fetch(`${API_BASE}/users/${userId}`, {
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-		});
-		if (!res.ok) throw new Error('Failed to fetch user profile');
-		return res.json();
-	},
-	getCurrentUser: async () => {
-		// try to get from backend; fallback to localStorage
-		const stored = localStorage.getItem(STORAGE_USER_KEY);
-		if (stored) return { data: JSON.parse(stored) };
-		const res = await fetch(`${API_BASE}/users/me`, {
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-		});
-		if (!res.ok) throw new Error('Failed to fetch current user');
-		return res.json();
-	},
-	updateProfile: async (formData) => {
-		const res = await fetch(`${API_BASE}/users/me`, {
-			method: 'PATCH',
-			headers: { ...getAuthHeaders() },
-			body: formData,
-		});
-		if (!res.ok) throw new Error('Failed to update profile');
-		return res.json();
-	},
+export const updateAccountDetails = async (payload) => {
+  const { data } = await api.patch("/users/update-account", payload);
+  return data;
 };
 
-export default userService;
+export const changePassword = async (payload) => {
+  const { data } = await api.post("/users/change-password", payload);
+  return data;
+};
+
+export const updateAvatar = async (formData) => {
+  const { data } = await api.patch("/users/avatar", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return data;
+};
+
+export const updateCoverImage = async (formData) => {
+  const { data } = await api.patch("/users/cover-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+  return data;
+};
+
+export const getUserChannelProfile = async (username) => {
+  const { data } = await api.get(`/users/c/${username}`);
+  return data;
+};
+
+export const getWatchHistory = async () => {
+  const { data } = await api.get("/users/history");
+  return data;
+};
+
+export const searchUsers = async (query, limit = 8) => {
+  const { data } = await api.get("/users/search", { params: { q: query, limit } });
+  return data;
+};

@@ -1,48 +1,49 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/common/Sidebar';
-import authService from '../services/authService';
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button.jsx";
+import Input from "../components/ui/Input.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const location = useLocation();
+  const { login } = useAuth();
+  const [form, setForm] = useState({ email: "", username: "", password: "" });
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
     try {
-      setLoading(true);
-      const res = await authService.login(form);
-      if (res?.token) {
-        localStorage.setItem('token', res.token);
-      }
-      if (res?.user) {
-        localStorage.setItem('user', JSON.stringify(res.user));
-      }
-      navigate('/');
+      await login(form);
+      const redirectTo = location.state?.from?.pathname || "/";
+      navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError(err.message || 'Authentication error');
-    } finally {
-      setLoading(false);
+      setError(err?.response?.data?.message || "Login failed. Try again.");
     }
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex' }}>
-        <Sidebar />
-        <main style={{ flex: 1, padding: 20, maxWidth: 600 }}>
-          <h2>Login</h2>
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-            <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" required />
-            <input name="password" value={form.password} onChange={handleChange} placeholder="Password" type="password" required />
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <button type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
-          </form>
-        </main>
+    <div className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
+      <div className="mx-auto max-w-md rounded-3xl border border-slate-900 bg-slate-900/70 p-8">
+        <h1 className="text-2xl font-semibold">Welcome back</h1>
+        <p className="mt-2 text-sm text-slate-400">Sign in to manage your studio.</p>
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <Input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" />
+          <Input name="username" value={form.username} onChange={handleChange} placeholder="Username (optional)" />
+          <Input name="password" type="password" value={form.password} onChange={handleChange} placeholder="Password" />
+          {error && <p className="text-sm text-rose-400">{error}</p>}
+          <Button type="submit" className="w-full">Sign in</Button>
+        </form>
+
+        <p className="mt-4 text-center text-sm text-slate-500">
+          New to ViewVerse? <Link to="/register" className="text-brand-300">Create an account</Link>
+        </p>
       </div>
     </div>
   );

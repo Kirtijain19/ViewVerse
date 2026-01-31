@@ -1,67 +1,77 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { API_BASE } from '../utils/constants';
-import Sidebar from '../components/common/Sidebar';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button.jsx";
+import Input from "../components/ui/Input.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ fullname: '', email: '', username: '', password: '' });
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { register } = useAuth();
+  const [form, setForm] = useState({ fullname: "", username: "", email: "", password: "" });
+  const [avatar, setAvatar] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleFileChange = (e) => {
-    const f = e.target.files && e.target.files[0];
-    setAvatarFile(f || null);
+  const handleChange = (event) => {
+    setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    const payload = new FormData();
+    Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+    if (avatar) payload.append("avatar", avatar);
+    if (coverImage) payload.append("coverImage", coverImage);
+
     try {
-      setLoading(true);
-
-      // backend expects multipart/form-data (avatar file)
-      const fd = new FormData();
-      fd.append('fullname', form.fullname);
-      fd.append('username', form.username);
-      fd.append('email', form.email);
-      fd.append('password', form.password);
-      if (avatarFile) fd.append('avatar', avatarFile);
-
-      const res = await fetch(`${API_BASE}/users/register`, {
-        method: 'POST',
-        body: fd,
-      });
-
-      // If backend not reachable, this will throw network error
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Registration failed');
-      navigate('/login');
+      await register(payload);
+      navigate("/login");
     } catch (err) {
-      setError(err.message || 'Registration error');
-    } finally {
-      setLoading(false);
+      setError(err?.response?.data?.message || "Registration failed.");
     }
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex' }}>
-        <Sidebar />
-        <main style={{ flex: 1, padding: 20, maxWidth: 700 }}>
-          <h2>Create account</h2>
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }} encType="multipart/form-data">
-            <input name="fullname" value={form.fullname} onChange={handleChange} placeholder="Full name" required />
-            <input name="username" value={form.username} onChange={handleChange} placeholder="Username" required />
-            <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" required />
-            <input name="password" value={form.password} onChange={handleChange} placeholder="Password" type="password" required />
-            <label style={{ fontSize: 13 }}>Avatar (optional)</label>
-            <input name="avatar" type="file" accept="image/*" onChange={handleFileChange} />
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <button type="submit" disabled={loading}>{loading ? 'Registering...' : 'Register'}</button>
-          </form>
-        </main>
+    <div className="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
+      <div className="mx-auto max-w-lg rounded-3xl border border-slate-900 bg-slate-900/70 p-8">
+        <h1 className="text-2xl font-semibold">Create your channel</h1>
+        <p className="mt-2 text-sm text-slate-400">Bring your content to ViewVerse.</p>
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <Input name="fullname" value={form.fullname} onChange={handleChange} placeholder="Full name" />
+          <Input name="username" value={form.username} onChange={handleChange} placeholder="Username" />
+          <Input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" />
+          <Input name="password" type="password" value={form.password} onChange={handleChange} placeholder="Password" />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-2 text-sm text-slate-400">
+              Avatar
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => setAvatar(event.target.files?.[0])}
+                className="block w-full rounded-xl border border-slate-800 bg-slate-900 p-2 text-xs text-slate-300"
+              />
+            </label>
+            <label className="space-y-2 text-sm text-slate-400">
+              Cover image
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => setCoverImage(event.target.files?.[0])}
+                className="block w-full rounded-xl border border-slate-800 bg-slate-900 p-2 text-xs text-slate-300"
+              />
+            </label>
+          </div>
+
+          {error && <p className="text-sm text-rose-400">{error}</p>}
+          <Button type="submit" className="w-full">Create account</Button>
+        </form>
+
+        <p className="mt-4 text-center text-sm text-slate-500">
+          Already have an account? <Link to="/login" className="text-brand-300">Sign in</Link>
+        </p>
       </div>
     </div>
   );

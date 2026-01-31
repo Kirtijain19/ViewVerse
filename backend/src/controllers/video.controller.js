@@ -1,18 +1,31 @@
 import mongoose, { isValidObjectId } from "mongoose"
 import { Video } from "../models/video.model.js"
 import { User } from "../models/user.model.js"
+import { Like } from "../models/like.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { upload } from "../middlewares/multer.middleware.js"
+import jwt from "jsonwebtoken"
+
+const getUserIdFromRequest = (req) => {
+    try {
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+        if (!token) return null
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+        return decoded?._id || null
+    } catch {
+        return null
+    }
+}
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query
     //TODO: get all videos based on query, sort, pagination
 
-    const matchStage = {}
+    const matchStage = { isPublished: true }
     if (query) {
         matchStage.title = { $regex: query, $options: "i" }
         // $regex makes partial matching possible
@@ -122,14 +135,33 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     video.views+=1
     await video.save()
-    
+
+    const userId = req.user?._id || getUserIdFromRequest(req)
+    if (userId) {
+        await User.findByIdAndUpdate(userId, {
+            $pull: { watchHistory: video._id }
+        })
+        await User.findByIdAndUpdate(userId, {
+            $push: { watchHistory: { $each: [video._id], $position: 0 } }
+        })
+    }
+
+    let isLiked = false
+    if (userId) {
+        const existingLike = await Like.findOne({
+            video: videoId,
+            likedBy: userId
+        })
+        isLiked = !!existingLike
+    }
+
     return res.status(200)
-        .json(new ApiResponse(200, video, "video fetched successfully"))
+        .json(new ApiResponse(200, { ...video.toObject(), isLiked }, "video fetched successfully"))
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    const { title, description, thubnail } = req.body
+    const { title, description } = req.body
     //TODO: update video details like title, description, thumbnail
 
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
@@ -145,15 +177,15 @@ const updateVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "you can update your own videos only")
     }
 
-    let thumbnailUrl = video.thubnail
-    if (req.files?.thumbnail?.[0].path) {
-        const thumbnailUpload = await uploadOnCloudinary(req.files.thubnail[0].path)
+    let thumbnailUrl = video.thumbnail
+    if (req.file?.path) {
+        const thumbnailUpload = await uploadOnCloudinary(req.file.path)
         thumbnailUrl = thumbnailUpload.url
     }
 
     video.title = title || video.title
     video.description = description || video.description
-    video.thubnail = thumbnailUrl
+    video.thumbnail = thumbnailUrl
     await video.save()
 
     return res.status(200)

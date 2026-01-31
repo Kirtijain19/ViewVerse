@@ -1,100 +1,55 @@
-import React, { createContext, useEffect, useState } from 'react';
-import authService from '../services/authService';
-import userService from '../services/userService';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import * as authService from "../services/authService.js";
+import { setAuthToken } from "../services/api.js";
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
-  const [user, setUser] = useState(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (token && !user) {
-      // try to hydrate user if token exists
-      refreshUser().catch(() => {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      });
+  const loadUser = useCallback(async () => {
+    try {
+      const response = await authService.getCurrentUser();
+      setUser(response?.data || null);
+    } catch (error) {
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = async (credentials) => {
-    setLoading(true);
-    try {
-      const res = await authService.login(credentials);
-      if (res?.token) {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user || {}));
-        setToken(res.token);
-        setUser(res.user || null);
-      }
-      return res;
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  const login = async (payload) => {
+    const response = await authService.login(payload);
+    const token = response?.data?.accessToken;
+    if (token) {
+      setAuthToken(token);
     }
+    setUser(response?.data?.user || null);
+    return response;
   };
 
-  const register = async (payload) => {
-    setLoading(true);
-    try {
-      const res = await authService.register(payload);
-      return res;
-    } finally {
-      setLoading(false);
-    }
+  const register = async (formData) => {
+    const response = await authService.register(formData);
+    return response;
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
+  const logout = async () => {
+    await authService.logout();
+    setAuthToken(null);
     setUser(null);
   };
 
-  const refreshUser = async () => {
-    try {
-      const res = await userService.getCurrentUser();
-      setUser(res.data || res);
-      if (res.data) localStorage.setItem('user', JSON.stringify(res.data));
-      return res;
-    } catch (err) {
-      setUser(null);
-      throw err;
-    }
-  };
-
-  const updateUser = (u) => {
-    setUser(u);
-    if (u) localStorage.setItem('user', JSON.stringify(u));
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        token,
-        user,
-        loading,
-        login,
-        register,
-        logout,
-        refreshUser,
-        updateUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, loading, login, register, logout, refresh: loadUser }),
+    [user, loading, loadUser]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthProvider;
+export const useAuthContext = () => useContext(AuthContext);

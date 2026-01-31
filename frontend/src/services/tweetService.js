@@ -1,37 +1,26 @@
-import { API_BASE, STORAGE_TOKEN_KEY } from '../utils/constants';
+import api from "./api.js";
 
-const getAuthHeaders = () => {
-	const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-	return token ? { Authorization: `Bearer ${token}` } : {};
+export const getUserTweets = async (userId) => {
+  const { data } = await api.get(`/tweets/user/${userId}`);
+  return data;
 };
 
-const tweetService = {
-	createTweet: async (content) => {
-		const res = await fetch(`${API_BASE}/tweets`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-			body: JSON.stringify({ content }),
-		});
-		if (!res.ok) throw new Error('Failed to create tweet');
-		return res.json();
-	},
-	deleteTweet: async (tweetId) => {
-		const res = await fetch(`${API_BASE}/tweets/${tweetId}`, {
-			method: 'DELETE',
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-		});
-		if (!res.ok) throw new Error('Failed to delete tweet');
-		return res.json();
-	},
-	updateTweet: async (tweetId, content) => {
-		const res = await fetch(`${API_BASE}/tweets/${tweetId}`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-			body: JSON.stringify({ content }),
-		});
-		if (!res.ok) throw new Error('Failed to update tweet');
-		return res.json();
-	},
+export const getAllTweets = async (params = {}) => {
+  const { data } = await api.get("/tweets/all", { params });
+  return data;
 };
 
-export default tweetService;
+export const createTweet = async (payload) => {
+  const { data } = await api.post("/tweets", payload);
+  return data;
+};
+
+export const updateTweet = async (tweetId, payload) => {
+  const { data } = await api.patch(`/tweets/${tweetId}`, payload);
+  return data;
+};
+
+export const deleteTweet = async (tweetId) => {
+  const { data } = await api.delete(`/tweets/${tweetId}`);
+  return data;
+};

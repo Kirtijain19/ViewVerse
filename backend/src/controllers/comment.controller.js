@@ -10,10 +10,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
     const {page = 1, limit = 10} = req.query
 
     if(!videoId){
-        throw ApiError(404, "video id not found")
+        throw new ApiError(404, "video id not found")
     }
     if(!mongoose.Types.ObjectId.isValid(videoId)){
-        throw ApiError(400, "invalid video id")
+        throw new ApiError(400, "invalid video id")
     }
 
     const comment=Comment.aggregate([

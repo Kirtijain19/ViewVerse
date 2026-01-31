@@ -1,36 +1,36 @@
-import { API_BASE, STORAGE_TOKEN_KEY } from '../utils/constants';
+import api from "./api.js";
 
-const getAuthHeaders = () => {
-	const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-	return token ? { Authorization: `Bearer ${token}` } : {};
+export const getUserPlaylists = async (userId) => {
+  const { data } = await api.get(`/playlist/user/${userId}`);
+  return data;
 };
 
-const playlistService = {
-	getUserPlaylists: async () => {
-		const res = await fetch(`${API_BASE}/playlist/`, {
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-		});
-		if (!res.ok) throw new Error('Failed to fetch playlists');
-		return res.json();
-	},
-	createPlaylist: async (payload) => {
-		const res = await fetch(`${API_BASE}/playlist/`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-			body: JSON.stringify(payload),
-		});
-		if (!res.ok) throw new Error('Failed to create playlist');
-		return res.json();
-	},
-	addVideoToPlaylist: async (playlistId, videoId) => {
-		const res = await fetch(`${API_BASE}/playlist/${playlistId}/add`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-			body: JSON.stringify({ videoId }),
-		});
-		if (!res.ok) throw new Error('Failed to add video to playlist');
-		return res.json();
-	},
+export const createPlaylist = async (payload) => {
+  const { data } = await api.post("/playlist", payload);
+  return data;
 };
 
-export default playlistService;
+export const addVideoToPlaylist = async (videoId, playlistId) => {
+  const { data } = await api.patch(`/playlist/add/${videoId}/${playlistId}`);
+  return data;
+};
+
+export const getPlaylistById = async (playlistId) => {
+  const { data } = await api.get(`/playlist/${playlistId}`);
+  return data;
+};
+
+export const updatePlaylist = async (playlistId, payload) => {
+  const { data } = await api.patch(`/playlist/${playlistId}`, payload);
+  return data;
+};
+
+export const deletePlaylist = async (playlistId) => {
+  const { data } = await api.delete(`/playlist/${playlistId}`);
+  return data;
+};
+
+export const removeVideoFromPlaylist = async (videoId, playlistId) => {
+  const { data } = await api.patch(`/playlist/remove/${videoId}/${playlistId}`);
+  return data;
+};

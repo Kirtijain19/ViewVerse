@@ -44,7 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //     throw new ApiError(400,"fullname is required")
     // }
 
-    if ([fullname, email, username, password].some((field) => field?.trim === "")) {
+    if ([fullname, email, username, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "all fields are required")
     }
 
@@ -66,7 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // console.log(req.files)
     // console.log("req.files")
-    const avatarLocalPath = req.files?.avatar[0].path
+    const avatarLocalPath = req.files?.avatar?.[0]?.path
     // const coverImageLocalPath = req.files?.coverImage[0].path
 
     // coverImage pass krna was not mandatory, but jab pass nhi kiya to we got an error, so:
@@ -253,7 +253,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "invalid old password")
     }
 
-    user.password = password
+    user.password = newPassword
     await user.save({ validateBeforeSave: false })
 
     return res
@@ -354,6 +354,21 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         throw new ApiError(400, "username is missing")
     }
 
+    let authUserId = req.user?._id
+    if (!authUserId) {
+        try {
+            const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+            if (token) {
+                const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+                authUserId = decoded?._id
+            }
+        } catch {
+            authUserId = null
+        }
+    }
+
+    const authUserObjectId = authUserId ? new mongoose.Types.ObjectId(authUserId) : null
+
     const channel = await User.aggregate([
         {
             $match: {
@@ -391,12 +406,12 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                     $size: "$subscribers"
                 },
                 channelsSubscribedToCount: {
-                    $size: "subscribedTo"
+                    $size: "$subscribedTo"
                 },
                 isSubscribed: {
                     // $in checks whether the current logged-in user’s ID (req.user._id) exists inside the list of subscriber IDs ($subscribers.subscriber).
                     $cond: {
-                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        if: authUserObjectId ? { $in: [authUserObjectId, "$subscribers.subscriber"] } : false,
                         then: true,
                         else: false
                     }
@@ -447,19 +462,21 @@ const getWatchHistory=asyncHandler(async (req,res)=>{
                 as:"watchHistory",
                 pipeline:[   // This lookup happens inside the videos lookup. It enriches each video with details of the user who uploaded it.
                     {
-                        $lookup:"users",
-                        localField:"owner",
-                        foreignField:"_id",
-                        as:"owner",
-                        pipeline:[  // limits owner fields to only fullname, username, and avatar
-                            {
-                                $project:{
-                                    fullname:1,
-                                    username:1,
-                                    avatar:1
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[  // limits owner fields to only fullname, username, and avatar
+                                {
+                                    $project:{
+                                        fullname:1,
+                                        username:1,
+                                        avatar:1
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        }
                     },
                     {
                         // Because $lookup creates an array (even if it finds just one matching document), $first picks the first element from the owner array and makes it a single object instead of an array.
@@ -489,7 +506,24 @@ const getUserById = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, user, 'user fetched successfully'));
 });
 
+const searchUsers = asyncHandler(async (req, res) => {
+    const { q, limit = 8 } = req.query;
+
+    if (!q?.trim()) {
+        return res.status(200).json(new ApiResponse(200, [], "no search query provided"));
+    }
+
+    const regex = new RegExp(q.trim(), "i");
+    const users = await User.find({
+        $or: [{ username: regex }, { fullname: regex }]
+    })
+        .select("username fullname avatar coverImage")
+        .limit(parseInt(limit, 10));
+
+    return res.status(200).json(new ApiResponse(200, users, "users fetched successfully"));
+});
+
 export {
     registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails,
-    updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory, getUserById
+    updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory, getUserById, searchUsers
 }

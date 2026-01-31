@@ -83,6 +83,52 @@ const getUserTweets = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tweets, "user tweets fetched successfully"))
 })
 
+const getAllTweets = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10 } = req.query
+
+    const tweet = Tweet.aggregate([
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            fullname: 1,
+                            username: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                owner: {
+                    $first: "$owner"
+                }
+            }
+        },
+        {
+            $sort: {
+                createdAt: -1
+            }
+        }
+    ])
+
+    const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10)
+    }
+
+    const tweets = await Tweet.aggregatePaginate(tweet, options)
+
+    return res.status(200)
+        .json(new ApiResponse(200, tweets, "all tweets fetched successfully"))
+})
+
 const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
     const {tweetId}=req.params
@@ -132,4 +178,4 @@ const deleteTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "tweet deleted successfully"))
 })
 
-export {createTweet, getUserTweets, updateTweet, deleteTweet}
+export {createTweet, getUserTweets, getAllTweets, updateTweet, deleteTweet}
