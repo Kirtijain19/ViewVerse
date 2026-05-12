@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
             unique:true,
             lowercase:true,
             trim:true,
-            index:true   // is we want to make our field searchable with optimization
+            index:true   // if we want to make our field searchable with optimization
         },
         email:{
             type:String,

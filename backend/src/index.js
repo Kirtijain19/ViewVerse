@@ -26,12 +26,27 @@ connectDB()
     console.log("mongoDB connection failed",err)
 })
 
+
+
+
+
+
+
+
+
+
+
+
 /*
 import express from "express"
 const app=express()
 
 //IIFI taki vo turant execute ho jae
 // EEFI start krne se phle semicolon use krte h kyi baar taki agr previous line me na ho semicolon to dikkat na aae
+
+import mongoose from "mongoose"
+import {DB_NAME} from "./constants"
+(async ()=>{})()   ->> syntax for IIFI
 ;(async()=>{
     try{
         await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)

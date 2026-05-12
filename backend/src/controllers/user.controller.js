@@ -27,7 +27,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // 1. get user details from frontend
 
-    // form ya json se data aara h to req.body, url se aara h to we'll see later
+    // form ya json se data aara h to req.body
 
     // console.log(req.body)
     const { email, password, fullname, username, } = req.body
@@ -354,6 +354,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         throw new ApiError(400, "username is missing")
     }
 
+    // manually decode JWT
+
     let authUserId = req.user?._id
     if (!authUserId) {
         try {
@@ -367,6 +369,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         }
     }
 
+    // Convert auth user ID to ObjectId
     const authUserObjectId = authUserId ? new mongoose.Types.ObjectId(authUserId) : null
 
     const channel = await User.aggregate([
@@ -513,6 +516,7 @@ const searchUsers = asyncHandler(async (req, res) => {
         return res.status(200).json(new ApiResponse(200, [], "no search query provided"));
     }
 
+    // Regex (Regular Expression) is a pattern used to search, match, or filter text.
     const regex = new RegExp(q.trim(), "i");
     const users = await User.find({
         $or: [{ username: regex }, { fullname: regex }]

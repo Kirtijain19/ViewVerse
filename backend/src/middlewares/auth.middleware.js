@@ -5,6 +5,10 @@ import {User} from "../models/user.model.js"
 
 // export const verifyJWT=asyncHandler(async (req,res,next)=>{
 // yha res ka use ni hora kuch so we can write _ in its place
+
+
+// check if a request has a valid JWT, find the corresponding user, attach that user to req.user, allow the request to continue only if authenticated
+
 export const verifyJWT=asyncHandler(async (req,_,next)=>{
     try {
         const token=req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")

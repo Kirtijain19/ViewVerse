@@ -9,6 +9,9 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { upload } from "../middlewares/multer.middleware.js"
 import jwt from "jsonwebtoken"
 
+
+//Extracts the logged-in user’s ID from the request,
+//if a valid JWT is present — otherwise returns null.
 const getUserIdFromRequest = (req) => {
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
@@ -152,7 +155,7 @@ const getVideoById = asyncHandler(async (req, res) => {
             video: videoId,
             likedBy: userId
         })
-        isLiked = !!existingLike
+        isLiked = !!existingLike   // used to convert a value into an explicit boolean.
     }
 
     return res.status(200)
