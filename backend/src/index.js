@@ -13,7 +13,7 @@ dotenv.config({
 connectDB()
 .then(()=>{
     const port = process.env.PORT || 8000;
-    const server = app.listen(port, '127.0.0.1', ()=>{
+    const server = app.listen(port, ()=>{
         console.log(`server is running at ${port}`)
         try{
             console.log('server address:', server.address())
