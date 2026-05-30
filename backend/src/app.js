@@ -11,12 +11,16 @@ const defaultOrigins = [
     "https://view-verse-beta.vercel.app"
 ];
 
+const normalizeOrigin = (o) => (o ? o.replace(/\/+$/g, "").toLowerCase() : o);
+
+const envOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+    : [];
+
 const allowedOrigins = [
     ...new Set([
-        ...defaultOrigins,
-        ...(process.env.CORS_ORIGIN
-            ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-            : [])
+        ...defaultOrigins.map(normalizeOrigin),
+        ...envOrigins.map(normalizeOrigin)
     ])
 ];
 
@@ -24,7 +28,8 @@ app.use(
     cors({
         origin: (origin, callback) => {
             if (!origin) return callback(null, true);
-            if (!allowedOrigins.length || allowedOrigins.includes(origin)) {
+            const incoming = normalizeOrigin(origin);
+            if (!allowedOrigins.length || allowedOrigins.includes(incoming)) {
                 return callback(null, true);
             }
             return callback(new Error("Not allowed by CORS"));
