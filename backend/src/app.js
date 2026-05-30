@@ -76,10 +76,12 @@ app.use("/api/v1/dashboard", dashboardRouter)
 // Error handler
 app.use((err, req, res, next) => {
     const statusCode = err?.statusCode || 500;
+    console.error("[globalError]", err?.stack || err)
     return res.status(statusCode).json({
         success: false,
         message: err?.message || "Internal Server Error",
-        errors: err?.errors || []
+        errors: err?.errors || [],
+        debug: process.env.NODE_ENV !== 'production' ? (err?.stack || null) : undefined
     });
 });
 
